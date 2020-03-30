@@ -3,6 +3,10 @@
 rem 记录当前位置
 set "CURRENT_DIR=%cd%"
 
+rem 删除下次执行时需要重新生成的文件
+if exist "%CURRENT_DIR%\rt.jar" del "%CURRENT_DIR%\rt.jar"
+if exist "%CURRENT_DIR%\tools.jar" del "%CURRENT_DIR%\tools.jar"
+
 rem jdk源码目录
 cd ..
 set "SOURCE_DIR=%cd%\src"
@@ -11,6 +15,9 @@ cd /d %CURRENT_DIR%
 rem 编译rt_debug.jar存放的目录
 set "RT_DEBUG_DIR=%CURRENT_DIR%\jdk_debug"
 
+rem 删除下次执行时需要重新生成的文件
+if exist  "%RT_DEBUG_DIR%."  del /Q "%RT_DEBUG_DIR%\."
+
 rem jdklib目录（编译代码要用的）
 rem set "LIB_PATH=%JAVA_HOME%\jre\lib\rt.jar;%JAVA_HOME%\lib\tools.jar"
 set "LIB_PATH=%JAVA_HOME%\jre\lib\rt.jar %JAVA_HOME%\lib\tools.jar"
@@ -18,11 +25,13 @@ set "LIB_PATH=%JAVA_HOME%\jre\lib\rt.jar %JAVA_HOME%\lib\tools.jar"
 rem rt_debug.jar需要存放的位置
 set "RT_DEBUG_ENDORSED_DIR=%JAVA_HOME%\jre\lib\endorsed"
 
+rem 删除下次执行时需要重新生成的文件
+if exist "%RT_DEBUG_ENDORSED_DIR%\rt_debug.jar" del "%RT_DEBUG_ENDORSED_DIR%\rt_debug.jar"
+
 rem 显示JAVA_HOME变量
 rem echo "%JAVA_HOME%"
 
-rem 如果jdk_debug不存在，则进行创建
-if not exist "%RT_DEBUG_DIR%" mkdir "%RT_DEBUG_DIR%"
+
 
 rem 生成需要编译的文件列表
 dir /B /S /X "%SOURCE_DIR%\*.java" > "%CURRENT_DIR%\filelist.txt"
