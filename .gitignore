@@ -1,6 +1,7 @@
 # Maven
 log/
 target/
+scripts/jdk_debug/
 out/
 !.mvn/wrapper/maven-wrapper.jar
 
