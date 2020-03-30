@@ -1895,8 +1895,8 @@ public class HashMap<K, V> extends AbstractMap<K, V>
          * Returns root of tree containing this node.
          */
         final TreeNode<K, V> root() {
-            for (TreeNode<K, V> r = this, p; ; ) {
-                if ((p = r.parent) == null)
+            for (TreeNode<K, V> r = this, p; ; ) { // 循环操作,检查当前节点知否为顶层root节点,若不是则将当前节点的parent节点赋值给r节点,
+                if ((p = r.parent) == null)        // 继续检测r节点是否顶层root节点,最终找出顶层root节点,返回给调用端
                     return r;
                 r = p;
             }
@@ -2052,45 +2052,45 @@ public class HashMap<K, V> extends AbstractMap<K, V>
                                         int h, K k, V v) {
             Class<?> kc = null;
             boolean searched = false;
-            TreeNode<K, V> root = (parent != null) ? root() : this;
-            for (TreeNode<K, V> p = root; ; ) {
+            TreeNode<K, V> root = (parent != null) ? root() : this; // parent不为空则说明当前节点不为顶层root节点则通过root()方法获取顶层root节点-->确保当前节点为root节点
+            for (TreeNode<K, V> p = root; ; ) {                     // 将当前节点p设置为root节点-->从顶层root节点开始查找插入点
                 int dir, ph;
                 K pk;
-                if ((ph = p.hash) > h)
+                if ((ph = p.hash) > h) // 待插入节点在当前节点的左支下进行插入
                     dir = -1;
-                else if (ph < h)
+                else if (ph < h)       // 待插入节点在当前节点的右支下进行插入
                     dir = 1;
-                else if ((pk = p.key) == k || (k != null && k.equals(pk)))
+                else if ((pk = p.key) == k || (k != null && k.equals(pk))) // hash碰撞且key碰撞：不插入待入节点，直接返回当前节点-->插入失败
                     return p;
                 else if ((kc == null &&
                         (kc = comparableClassFor(k)) == null) ||
-                        (dir = compareComparables(kc, k, pk)) == 0) {
-                    if (!searched) {
+                        (dir = compareComparables(kc, k, pk)) == 0) { // 使用key实现的接口去比较,如果还是相等,则进入进步搜索
+                    if (!searched) { // 若是第一次采用该比较则允许搜索进行,否则直接采用tieBreakOrder(k, pk)中hashCode()方式比较出key的大小情况
                         TreeNode<K, V> q, ch;
                         searched = true;
                         if (((ch = p.left) != null &&
-                                (q = ch.find(h, k, kc)) != null) ||
+                                (q = ch.find(h, k, kc)) != null) || // 左支下存在与待插入节点成功匹配的节点,则返回匹配到的节点,且放弃插入
                                 ((ch = p.right) != null &&
-                                        (q = ch.find(h, k, kc)) != null))
+                                        (q = ch.find(h, k, kc)) != null))// 右支下存在与待插入节点成功匹配的节点,则返回匹配到的节点,且放弃插入
                             return q;
                     }
-                    dir = tieBreakOrder(k, pk);
+                    dir = tieBreakOrder(k, pk);     //接采用tieBreakOrder(k, pk)中hashCode()方式比较出key的大小情况
                 }
 
-                TreeNode<K, V> xp = p;
-                if ((p = (dir <= 0) ? p.left : p.right) == null) {
-                    Node<K, V> xpn = xp.next;
-                    TreeNode<K, V> x = map.newTreeNode(h, k, v, xpn);
-                    if (dir <= 0)
+                TreeNode<K, V> xp = p; // xp中间变量及可插入的当前节点
+                if ((p = (dir <= 0) ? p.left : p.right) == null) { // 当前节点的对应叶子节点必须为虚节点，则待插入节点可直接插入，否则将对应叶子节点作为当前节点p，进入下一次循环
+                    Node<K, V> xpn = xp.next; // 获取到当前节点的写下一个节点xpn,将其设置为待插入节点x的下一个节点（如果不为null）
+                    TreeNode<K, V> x = map.newTreeNode(h, k, v, xpn); // 创建新节点x,其下一个节点为xpn
+                    if (dir <= 0) // 小于当前节点,则左侧插入
                         xp.left = x;
-                    else
+                    else          // 大于当前节点,则右侧插入
                         xp.right = x;
-                    xp.next = x;
-                    x.parent = x.prev = xp;
-                    if (xpn != null)
+                    xp.next = x;  // 当前节点的下一个节点由原来的xpn调整为x
+                    x.parent = x.prev = xp; // x的上一个节点调整为当前节点xp,与2089行对应
+                    if (xpn != null) // 如果xpn存在,则调整他的前一个节点为待插入的新节点x,与2083行对应
                         ((TreeNode<K, V>) xpn).prev = x;
-                    moveRootToFront(tab, balanceInsertion(root, x));
-                    return null;
+                    moveRootToFront(tab, balanceInsertion(root, x)); //1、调用balanceInsertion方法保持红黑树的性质 2、moveRootToFront所做的是更正链表头 -->取出经过balanceInsertion摧残之后的根节点，判断如果与摧残之前的节点不同，则调整链表顺序。
+                    return null;  //    xp——>xpn >>> xp——>x——>xpn
                 }
             }
         }
@@ -2300,8 +2300,8 @@ public class HashMap<K, V> extends AbstractMap<K, V>
 
         static <K, V> TreeNode<K, V> balanceInsertion(TreeNode<K, V> root,
                                                       TreeNode<K, V> x) {
-            x.red = true;
-            for (TreeNode<K, V> xp, xpp, xppl, xppr; ; ) {
+            x.red = true; // 新插入的treeNode默认为红节点
+            for (TreeNode<K, V> xp, xpp, xppl, xppr; ; ) { // 针对于子,父,祖父三层出现的3种会打乱红黑树的性质情况进行树结构的调整：https://blog.csdn.net/qq_40267688/article/details/83106637
                 if ((xp = x.parent) == null) {
                     x.red = false;
                     return x;

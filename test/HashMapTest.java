@@ -9,7 +9,6 @@ import java.util.HashMap;
  */
 public class HashMapTest {
     public static void main(String[] args) {
-
         HashMap<String, Integer> map = new HashMap<>();
         map.put("k1", 1);
         map.remove("k1");
