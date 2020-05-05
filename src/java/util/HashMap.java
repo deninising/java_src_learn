@@ -638,45 +638,45 @@ public class HashMap<K, V> extends AbstractMap<K, V>
     final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
                    boolean evict) {
         Node<K, V>[] tab;
-        Node<K, V> p;
+        Node<K, V> p; // 待插入位置上的节点变量
         int n, i;// egg: Node节点，内部维护着key,value,hash以及下一个Node节点的引用next
         if ((tab = table) == null || (n = tab.length) == 0)
             n = (tab = resize()).length;
-        if ((p = tab[i = (n - 1) & hash]) == null)
+        if ((p = tab[i = (n - 1) & hash]) == null) // 待插入位置tab[i]上的节点为空
             tab[i] = newNode(hash, key, value, null);
-        else {
-            Node<K, V> e;
+        else { // 待插入的位置tab[i]上已经有节点存在
+            Node<K, V> e; // 待插入节点中间变量
             K k;
             if (p.hash == hash &&
-                    ((k = p.key) == key || (key != null && key.equals(k))))
-                e = p;
-            else if (p instanceof TreeNode)
-                e = ((TreeNode<K, V>) p).putTreeVal(this, tab, hash, key, value);
-            else {
+                    ((k = p.key) == key || (key != null && key.equals(k)))) // 待插入位置上原有的
+                e = p; // 待插入位置上的node与待插入的node的key值相同-->转为对同一个node进行修改操作,而非插入操作
+            else if (p instanceof TreeNode) // hash碰撞但是key值又不相等-->该tab[i]处为一红黑树的root节点,进而转为对红黑树的操作
+                e = ((TreeNode<K, V>) p).putTreeVal(this, tab, hash, key, value); // 对红黑树进行节点插入,成功插入e将为null,失败插入e将为已存在的一个treeNode节点
+            else { // tab[i]处还是一个链表结果,则直接插入到链表尾部。
                 for (int binCount = 0; ; ++binCount) {
-                    if ((e = p.next) == null) {
+                    if ((e = p.next) == null) { // 找到链表尾部位置,准备新节点的插入
                         p.next = newNode(hash, key, value, null);
-                        if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
-                            treeifyBin(tab, hash);
+                        if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st 判断是否需要将链表结构转换为红黑树结构
+                            treeifyBin(tab, hash); // 链表结构-->红黑树结构(尝试)：最终能否转为红黑树还得看tab.length是否大于64
                         break;
                     }
                     if (e.hash == hash &&
-                            ((k = e.key) == key || (key != null && key.equals(k))))
+                            ((k = e.key) == key || (key != null && key.equals(k)))) // 链表中已存在该node
                         break;
                     p = e;
                 }
             }
-            if (e != null) { // existing mapping for key
+            if (e != null) { // existing mapping for key  说明hashMap中已经存在待插入的node节点,进一步判断该hashMap是否支持对已存在节点的value值进行修改操作
                 V oldValue = e.value;
-                if (!onlyIfAbsent || oldValue == null)
-                    e.value = value;
+                if (!onlyIfAbsent || oldValue == null) // onlyIfAbsent:只有当value缺失的时候,才允许改变Node的value
+                    e.value = value; // 允许修改原有node中已经存在的value值
                 afterNodeAccess(e);
-                return oldValue;
+                return oldValue;     // 将原有的value值返回
             }
         }
-        ++modCount;
-        if (++size > threshold)
-            resize();
+        ++modCount; // hashMap的修改（node的修改或整个hashMap结构的修改）次数计数器加一
+        if (++size > threshold) // 判断是否达到了需要扩容的条件
+            resize();           // 扩容
         afterNodeInsertion(evict);
         return null;
     }
@@ -768,11 +768,11 @@ public class HashMap<K, V> extends AbstractMap<K, V>
     final void treeifyBin(Node<K, V>[] tab, int hash) {
         int n, index;
         Node<K, V> e;
-        if (tab == null || (n = tab.length) < MIN_TREEIFY_CAPACITY)
+        if (tab == null || (n = tab.length) < MIN_TREEIFY_CAPACITY) // 不具备转为红黑树的条件,直接采取对tab数组进行扩容
             resize();
-        else if ((e = tab[index = (n - 1) & hash]) != null) {
+        else if ((e = tab[index = (n - 1) & hash]) != null) { // 将该链表转为红黑树结构-->分两步：1.构建红黑树中的链表 2.构建红黑树
             TreeNode<K, V> hd = null, tl = null;
-            do {
+            do {                                              //   1.构建红黑树中的链表
                 TreeNode<K, V> p = replacementTreeNode(e, null);
                 if (tl == null)
                     hd = p;
@@ -783,7 +783,7 @@ public class HashMap<K, V> extends AbstractMap<K, V>
                 tl = p;
             } while ((e = e.next) != null);
             if ((tab[index] = hd) != null)
-                hd.treeify(tab);
+                hd.treeify(tab);                            //   2.构建红黑树:Forms tree of the nodes linked from this node
         }
     }
 
@@ -2019,13 +2019,13 @@ public class HashMap<K, V> extends AbstractMap<K, V>
                                 xp.left = x;
                             else
                                 xp.right = x;
-                            root = balanceInsertion(root, x);
+                            root = balanceInsertion(root, x);  // 平衡树结构
                             break;
                         }
                     }
                 }
             }
-            moveRootToFront(tab, root);
+            moveRootToFront(tab, root);  // 平衡操作后root节点要是被改变,需要调整新root在tab中的位置-->Ensures that the given root is the first node of its bin.
         }
 
         /**
